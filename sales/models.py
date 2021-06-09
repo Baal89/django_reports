@@ -4,6 +4,7 @@ from costumers.models import Customer
 from profiles.models import Profile
 from django.utils import timezone
 from .utils import generate_code
+from django.shortcuts import reverse
 
 # Create your models here.
 
@@ -35,6 +36,9 @@ class Sale(models.Model):
         if self.created is None:
             self.created = timezone.now()
         return super().save(*args, **kwargs)
+
+    def get_absolute_url(self):
+        return reverse('sales:detail', kwargs={'pk': self.pk})
 
     def __str__(self):
         return f"Sales for the amount of ${self.total_price}"
