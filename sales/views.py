@@ -14,6 +14,8 @@ def home_view(request):
     merge_df = None
     df = None
     chart = None
+    no_data = None
+
     search_form = SalesSearchForm(request.POST or None)
     report_form = ReportForm()
 
@@ -21,6 +23,7 @@ def home_view(request):
         date_from = request.POST.get('date_from')
         date_to = request.POST.get('date_to')
         chart_type = request.POST.get('chart_type')
+        results_by = request.POST.get('results_by')
 
         sale_qs = Sale.objects.filter(created__date__lte=date_to, created__date__gte=date_from)
         if len(sale_qs) > 0:
@@ -29,6 +32,7 @@ def home_view(request):
             sale_df['salesman_id'] = sale_df['salesman_id'].apply(get_salesman_from_id)
             sale_df['created'] = sale_df['created'].apply(lambda x: x.strftime('%Y-%m-%d'))
             sale_df.rename({'customer_id': 'customer', 'salesman_id': 'salesman', 'id': 'sales_id'}, axis=1, inplace=True)
+            
             positions_data = []
             for sale in sale_qs:
                 for pos in sale.get_positions():
@@ -46,14 +50,14 @@ def home_view(request):
 
             df = merge_df.groupby('transaction_id', as_index=False)['price'].agg('sum')
 
-            chart = get_chart(chart_type, df, labels=df['transaction_id'].values)
+            chart = get_chart(chart_type, sale_df, results_by)
 
             position_df = position_df.to_html()
             sale_df = sale_df.to_html()
             merge_df = merge_df.to_html()
             df = df.to_html()
         else:
-            print('no data')
+            no_data = 'No data available in this date range'
 
     context = {
         'search_form': search_form,
@@ -63,6 +67,7 @@ def home_view(request):
         'merge_df': merge_df,
         'df': df,
         'chart': chart,
+        'no_data': no_data
         }
     return render(request, 'sales/home.html', context)
 

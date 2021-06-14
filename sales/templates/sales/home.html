@@ -30,8 +30,12 @@ home
             </div>
         </div>
     </div>
-    <hr>
-
+    
+    {% if no_data %}
+        <div class="alert alert-warning" role="alert">
+            {{ no_data }}
+        </div>
+    {% endif %}
     <form action="" method="POST">
         {% csrf_token %}
         {{ search_form|crispy }}
@@ -50,8 +54,7 @@ home
         <br>
         Chart
         <img src="data:image/png;base64, {{chart|safe}}" id='img'>
-    {% else %}
-        <h3>no data </h3>
+
     {% endif %}
 
     <br>
