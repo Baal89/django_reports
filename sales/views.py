@@ -2,8 +2,9 @@ from django.shortcuts import render
 from django.views.generic import ListView, DetailView
 from .models import Sale
 from .forms import SalesSearchForm
+from app_reports.forms import ReportForm
 import pandas as pd
-from .utils import get_salesman_from_id, customer_from_id
+from .utils import get_salesman_from_id, customer_from_id, get_chart
 
 # Create your views here.
 
@@ -12,7 +13,9 @@ def home_view(request):
     position_df = None
     merge_df = None
     df = None
-    form = SalesSearchForm(request.POST or None)
+    chart = None
+    search_form = SalesSearchForm(request.POST or None)
+    report_form = ReportForm()
 
     if request.method == 'POST':
         date_from = request.POST.get('date_from')
@@ -43,6 +46,8 @@ def home_view(request):
 
             df = merge_df.groupby('transaction_id', as_index=False)['price'].agg('sum')
 
+            chart = get_chart(chart_type, df, labels=df['transaction_id'].values)
+
             position_df = position_df.to_html()
             sale_df = sale_df.to_html()
             merge_df = merge_df.to_html()
@@ -51,11 +56,13 @@ def home_view(request):
             print('no data')
 
     context = {
-        'form': form,
+        'search_form': search_form,
+        'report_form': report_form,
         'sale_df':sale_df,
         'position_df':position_df,
         'merge_df': merge_df,
         'df': df,
+        'chart': chart,
         }
     return render(request, 'sales/home.html', context)
 
